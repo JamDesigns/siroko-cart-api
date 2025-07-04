@@ -28,3 +28,8 @@ services:
         public: true
         autowire: true
         autoconfigure: true
+
+    App\Cart\Infrastructure\Controller\CartModificationController:
+        public: true
+        autowire: true
+        autoconfigure: true
