@@ -18,3 +18,13 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Cart\Infrastructure\Persistence\InMemoryCartRepository:
+        public: true
+        autowire: true
+        autoconfigure: true
+
+    App\Cart\Infrastructure\Controller\CartController:
+        public: true
+        autowire: true
+        autoconfigure: true
