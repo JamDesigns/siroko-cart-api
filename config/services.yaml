@@ -34,7 +34,13 @@ services:
         autowire: true
         autoconfigure: true
 
+    App\Cart\Domain\Repository\CartRepository:
+        alias: App\Cart\Infrastructure\Persistence\InMemoryCartRepository
+
     App\Checkout\Infrastructure\Controller\CheckoutController:
         public: true
         autowire: true
         autoconfigure: true
+
+    App\Checkout\Domain\Repository\OrderRepository:
+        alias: App\Checkout\Infrastructure\Persistence\Doctrine\DoctrineOrderRepository
