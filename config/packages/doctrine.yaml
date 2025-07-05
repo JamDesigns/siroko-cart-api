@@ -24,6 +24,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'App\Entity'
                 alias: App
+            Checkout:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Checkout/Infrastructure/Persistence/Doctrine'
+                prefix: 'App\Checkout\Infrastructure\Persistence\Doctrine'
+                alias: Checkout
         controller_resolver:
             auto_mapping: false
 
