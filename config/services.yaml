@@ -33,3 +33,8 @@ services:
         public: true
         autowire: true
         autoconfigure: true
+
+    App\Checkout\Infrastructure\Controller\CheckoutController:
+        public: true
+        autowire: true
+        autoconfigure: true
