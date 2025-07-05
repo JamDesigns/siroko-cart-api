@@ -9,3 +9,9 @@ cart_controllers:
         path: ../src/Cart/Infrastructure/Controller/
         namespace: App\Cart\Infrastructure\Controller
     type: attribute
+
+checkout_controllers:
+    resource:
+        path: ../src/Checkout/Infrastructure/Controller/
+        namespace: App\Checkout\Infrastructure\Controller
+    type: attribute
