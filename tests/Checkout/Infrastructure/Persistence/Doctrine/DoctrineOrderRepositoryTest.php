@@ -11,6 +11,7 @@ use App\Cart\Infrastructure\Persistence\InMemoryCartRepository;
 use App\Checkout\Application\Command\CheckoutCartCommand;
 use App\Checkout\Application\Command\CheckoutCartHandler;
 use App\Checkout\Infrastructure\Persistence\Doctrine\OrderEntity;
+use App\Checkout\Infrastructure\Persistence\Doctrine\DoctrineOrderRepository;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -28,27 +29,23 @@ class DoctrineOrderRepositoryTest extends KernelTestCase
     {
         echo "🧪 Running DB persistence test: DoctrineOrderRepository\n";
 
-        $container = static::getContainer();
+        // ✅ Use isolated repository, not from container
+        $cartRepo = new InMemoryCartRepository();
+        $orderRepo = static::getContainer()->get(DoctrineOrderRepository::class);
 
-        /** @var InMemoryCartRepository $cartRepo */
-        $cartRepo = $container->get(InMemoryCartRepository::class);
-
-        $cartId = 'checkout-db-cart';
+        $cartId = 'checkout-db-cart-isolated';
         $productId = new ProductId('66666666-6666-6666-6666-666666666666');
         $currency = new Currency('EUR');
 
         $cart = new Cart($cartId);
         $cart->addProduct($productId, new Quantity(2), new Money(1000, $currency));
-        $cartRepo->save($cart); // We save in the same instance that the handler will use
+        $cartRepo->save($cart);
 
-        /** @var CheckoutCartHandler $handler */
-        $handler = $container->get(CheckoutCartHandler::class);
+        $handler = new CheckoutCartHandler($cartRepo, $orderRepo);
         $handler(new CheckoutCartCommand($cartId));
 
-        // We validate that the order has been saved in the database
-        $order = $this->em->getRepository(OrderEntity::class)->findOneBy(['id' => $orderId = $orderId ?? null]);
-
-        // If you don't find it by ID, we simply search for the last order
+        // 🔍 Verify persisted order
+        $order = $this->em->getRepository(OrderEntity::class)->findOneBy(['id' => $cartId]);
         if (!$order) {
             $order = $this->em->getRepository(OrderEntity::class)->findOneBy([], ['id' => 'DESC']);
         }
@@ -63,7 +60,7 @@ class DoctrineOrderRepositoryTest extends KernelTestCase
     {
         parent::tearDown();
 
-        // Clean database
+        // 🧹 Clean DB after test
         $this->em->createQuery('DELETE FROM App\Checkout\Infrastructure\Persistence\Doctrine\OrderItemEntity')->execute();
         $this->em->createQuery('DELETE FROM App\Checkout\Infrastructure\Persistence\Doctrine\OrderEntity')->execute();
     }
