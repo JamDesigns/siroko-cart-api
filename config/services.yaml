@@ -39,6 +39,10 @@ services:
         autowire: true
         autoconfigure: true
 
+    App\Cart\Application\Command\ClearCartHandler:
+        autowire: true
+        autoconfigure: true
+
     App\Cart\Domain\Repository\CartRepository:
         alias: App\Cart\Infrastructure\Persistence\Doctrine\DoctrineCartRepository
 
