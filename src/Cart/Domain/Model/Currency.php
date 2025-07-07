@@ -20,4 +20,14 @@ final class Currency
     {
         return $this->code === $other->code();
     }
+
+    public static function fromPrimitives(string $code): self
+    {
+        return new self($code);
+    }
+
+    public function toPrimitives(): string
+    {
+        return $this->code;
+    }
 }

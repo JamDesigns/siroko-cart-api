@@ -20,7 +20,7 @@ class DoctrineOrderRepository implements OrderRepository
 
         foreach ($order->items() as $item) {
             $itemEntity = new OrderItemEntity(
-                $item->productId(),
+                $item->product(),
                 $item->quantity(),
                 $item->unitPrice()
             );

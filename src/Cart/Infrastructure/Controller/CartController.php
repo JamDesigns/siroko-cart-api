@@ -22,7 +22,7 @@ class CartController
 
         $items = array_map(function ($item) {
             return [
-                'productId'   => $item->productId()->value(),
+                'product'   => $item->product()->value(),
                 'quantity'    => $item->quantity()->value(),
                 'unitPrice'   => $item->unitPrice()->amount(),
                 'currency'    => $item->unitPrice()->currency()->code(),

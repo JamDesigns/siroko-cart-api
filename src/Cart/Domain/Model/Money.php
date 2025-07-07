@@ -2,6 +2,8 @@
 
 namespace App\Cart\Domain\Model;
 
+use App\Cart\Domain\Model\Currency;
+
 final class Money
 {
     public function __construct(
@@ -31,5 +33,18 @@ final class Money
     public function isSameCurrency(Money $other): bool
     {
         return $this->currency->equals($other->currency());
+    }
+
+    public static function fromPrimitives(array $data): self
+    {
+        return new self($data['amountInCents'], Currency::fromPrimitives($data['currency']));
+    }
+
+    public function toPrimitives(): array
+    {
+        return [
+            'amountInCents' => $this->amountInCents,
+            'currency' => $this->currency->toPrimitives(),
+        ];
     }
 }

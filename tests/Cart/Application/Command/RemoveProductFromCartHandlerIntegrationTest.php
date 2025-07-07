@@ -21,19 +21,19 @@ class RemoveProductFromCartHandlerIntegrationTest extends TestCase
         $removeHandler = new RemoveProductFromCartHandler($repo);
 
         $cartId = 'test-cart-4';
-        $productId1 = '00000000-0000-0000-0000-000000000005';
-        $productId2 = '00000000-0000-0000-0000-000000000006';
+        $product1 = '00000000-0000-0000-0000-000000000005';
+        $product2 = '00000000-0000-0000-0000-000000000006';
         $currency = new Currency('EUR');
 
-        $addHandler(new AddProductToCartCommand($cartId, $productId1, 1, 1000, $currency));
-        $addHandler(new AddProductToCartCommand($cartId, $productId2, 1, 1500, $currency));
+        $addHandler(new AddProductToCartCommand($cartId, $product1, 1, 1000, $currency));
+        $addHandler(new AddProductToCartCommand($cartId, $product2, 1, 1500, $currency));
 
-        $removeHandler(new RemoveProductFromCartCommand($cartId, $productId1));
+        $removeHandler(new RemoveProductFromCartCommand($cartId, $product1));
 
         $cart = $repo->find($cartId);
 
         $this->assertNotNull($cart);
         $this->assertCount(1, $cart->items());
-        $this->assertEquals($productId2, $cart->items()[0]->productId()->value());
+        $this->assertEquals($product2, $cart->items()[0]->product()->value());
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Cart\Application\Command;
 
-use App\Cart\Domain\Model\ProductId;
+use App\Cart\Domain\Model\Product;
 use App\Cart\Domain\Repository\CartRepository;
 
 class RemoveProductFromCartHandler
@@ -17,7 +17,7 @@ class RemoveProductFromCartHandler
             return; // Optionally throw exception
         }
 
-        $cart->removeProduct(new ProductId($command->productId));
+        $cart->removeProduct(new Product($command->product));
 
         $this->repository->save($cart);
     }

@@ -6,7 +6,7 @@ class UpdateProductQuantityCommand
 {
     public function __construct(
         public readonly string $cartId,
-        public readonly string $productId,
+        public readonly string $product,
         public readonly int $newQuantity
     ) {}
 }

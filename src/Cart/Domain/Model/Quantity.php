@@ -15,4 +15,14 @@ final class Quantity
     {
         return $this->value;
     }
+
+    public static function fromPrimitives(int $value): self
+    {
+        return new self($value);
+    }
+
+    public function toPrimitives(): int
+    {
+        return $this->value;
+    }
 }

@@ -5,7 +5,7 @@ namespace App\Tests\Checkout\Application\Command;
 use App\Cart\Domain\Model\Cart;
 use App\Cart\Domain\Model\Currency;
 use App\Cart\Domain\Model\Money;
-use App\Cart\Domain\Model\ProductId;
+use App\Cart\Domain\Model\Product;
 use App\Cart\Domain\Model\Quantity;
 use App\Cart\Infrastructure\Persistence\InMemoryCartRepository;
 use App\Checkout\Application\Command\CheckoutCartCommand;
@@ -20,11 +20,11 @@ class CheckoutCartHandlerTest extends TestCase
         echo "🧪 Running integration test: CheckoutCartHandler\n";
 
         $cartId = 'checkout-cart-123';
-        $productId = new ProductId('44444444-4444-4444-4444-444444444444');
+        $product = new Product('44444444-4444-4444-4444-444444444444');
         $currency = new Currency('EUR');
 
         $cart = new Cart($cartId);
-        $cart->addProduct($productId, new Quantity(2), new Money(1500, $currency)); // 30 €
+        $cart->addProduct($product, new Quantity(2), new Money(1500, $currency)); // 30 €
 
         $cartRepo = new InMemoryCartRepository();
         $cartRepo->save($cart);
@@ -49,6 +49,6 @@ class CheckoutCartHandlerTest extends TestCase
         $this->assertEquals(3000, $order->total());
         $this->assertEquals('EUR', $order->currency());
         $this->assertCount(1, $order->items());
-        $this->assertEquals('44444444-4444-4444-4444-444444444444', $order->items()[0]->productId());
+        $this->assertEquals('44444444-4444-4444-4444-444444444444', $order->items()[0]->product());
     }
 }
