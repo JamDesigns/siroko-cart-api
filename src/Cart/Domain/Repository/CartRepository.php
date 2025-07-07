@@ -11,4 +11,6 @@ interface CartRepository
     public function save(Cart $cart): void;
 
     public function delete(string $id): void;
+
+    public function all(): array;
 }
