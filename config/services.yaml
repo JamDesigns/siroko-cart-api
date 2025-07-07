@@ -56,5 +56,8 @@ services:
         autowire: true
         autoconfigure: true
 
+    App\Checkout\Infrastructure\Controller\OrderQueryController:
+        tags: ['controller.service_arguments']
+
     App\Checkout\Domain\Repository\OrderRepository:
         alias: App\Checkout\Infrastructure\Persistence\Doctrine\DoctrineOrderRepository

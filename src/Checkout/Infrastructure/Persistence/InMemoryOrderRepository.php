@@ -19,4 +19,9 @@ class InMemoryOrderRepository implements OrderRepository
     {
         return $this->orders[$orderId] ?? null;
     }
+
+    public function findAll(): array
+    {
+        return array_values($this->orders);
+    }
 }

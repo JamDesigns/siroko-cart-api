@@ -36,4 +36,11 @@ class DoctrineOrderRepository implements OrderRepository
         // Optional: implement later if needed
         return null;
     }
+
+    public function findAll(): array
+    {
+        return $this->em
+            ->getRepository(OrderEntity::class)
+            ->findAll();
+    }
 }
