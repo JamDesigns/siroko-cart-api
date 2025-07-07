@@ -18,7 +18,7 @@ class OrderItemEntity
     private OrderEntity $order;
 
     #[ORM\Column(type: 'string', length: 36)]
-    private string $productId;
+    private string $product;
 
     #[ORM\Column(type: 'integer')]
     private int $quantity;
@@ -26,9 +26,9 @@ class OrderItemEntity
     #[ORM\Column(type: 'integer')]
     private int $unitPrice;
 
-    public function __construct(string $productId, int $quantity, int $unitPrice)
+    public function __construct(string $product, int $quantity, int $unitPrice)
     {
-        $this->productId = $productId;
+        $this->product = $product;
         $this->quantity = $quantity;
         $this->unitPrice = $unitPrice;
     }

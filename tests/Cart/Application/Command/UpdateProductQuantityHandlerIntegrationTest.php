@@ -21,14 +21,14 @@ class UpdateProductQuantityHandlerIntegrationTest extends TestCase
         $updateHandler = new UpdateProductQuantityHandler($repo);
 
         $cartId = 'test-cart-5';
-        $productId = '00000000-0000-0000-0000-000000000007';
+        $product = '00000000-0000-0000-0000-000000000007';
         $currency = new Currency('EUR');
 
         // Add product with quantity 2
-        $addHandler(new AddProductToCartCommand($cartId, $productId, 2, 1000, $currency));
+        $addHandler(new AddProductToCartCommand($cartId, $product, 2, 1000, $currency));
 
         // Update quantity to 5
-        $updateHandler(new UpdateProductQuantityCommand($cartId, $productId, 5));
+        $updateHandler(new UpdateProductQuantityCommand($cartId, $product, 5));
 
         $cart = $repo->find($cartId);
 
@@ -46,7 +46,7 @@ class UpdateProductQuantityHandlerIntegrationTest extends TestCase
         $updateHandler = new UpdateProductQuantityHandler($repo);
 
         $cartId = 'test-cart-6';
-        $productId = '00000000-0000-0000-0000-000000000099';
+        $product = '00000000-0000-0000-0000-000000000099';
 
         // Manually create a cart (empty, without products)
         $repo->save(new \App\Cart\Domain\Model\Cart($cartId));
@@ -54,6 +54,6 @@ class UpdateProductQuantityHandlerIntegrationTest extends TestCase
         $this->expectException(\App\Cart\Domain\Exception\ProductNotInCartException::class);
 
         // Attempt to update a product that doesn't exist
-        $updateHandler(new UpdateProductQuantityCommand($cartId, $productId, 3));
+        $updateHandler(new UpdateProductQuantityCommand($cartId, $product, 3));
     }
 }

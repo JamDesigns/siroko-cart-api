@@ -5,14 +5,14 @@ namespace App\Checkout\Domain\Model;
 class OrderItem
 {
     public function __construct(
-        private readonly string $productId,
+        private readonly string $product,
         private readonly int $quantity,
         private readonly int $unitPrice
     ) {}
 
-    public function productId(): string
+    public function product(): string
     {
-        return $this->productId;
+        return $this->product;
     }
 
     public function quantity(): int

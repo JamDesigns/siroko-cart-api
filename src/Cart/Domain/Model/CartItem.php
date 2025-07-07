@@ -5,14 +5,14 @@ namespace App\Cart\Domain\Model;
 final class CartItem
 {
     public function __construct(
-        private ProductId $productId,
+        private Product $product,
         private Quantity $quantity,
         private Money $unitPrice
     ) {}
 
-    public function productId(): ProductId
+    public function product(): Product
     {
-        return $this->productId;
+        return $this->product;
     }
 
     public function quantity(): Quantity
@@ -33,5 +33,23 @@ final class CartItem
     public function updateQuantity(Quantity $newQuantity): void
     {
         $this->quantity = $newQuantity;
+    }
+
+    public static function fromPrimitives(array $data): self
+    {
+        return new self(
+            Product::fromPrimitives($data['product']),
+            Quantity::fromPrimitives($data['quantity']),
+            Money::fromPrimitives($data['unitPrice'])
+        );
+    }
+
+    public function toPrimitives(): array
+    {
+        return [
+            'product' => $this->product->toPrimitives(),
+            'quantity' => $this->quantity->toPrimitives(),
+            'unitPrice' => $this->unitPrice->toPrimitives(),
+        ];
     }
 }

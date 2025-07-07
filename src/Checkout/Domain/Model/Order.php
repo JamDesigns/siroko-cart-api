@@ -3,7 +3,7 @@
 namespace App\Checkout\Domain\Model;
 
 use App\Cart\Domain\Model\Cart;
-use App\Cart\Domain\Model\ProductId;
+use App\Checkout\Domain\Model\OrderItem;
 
 class Order
 {
@@ -25,7 +25,7 @@ class Order
 
         foreach ($cart->items() as $item) {
             $order->items[] = new OrderItem(
-                $item->productId()->value(),
+                $item->product()->value(),
                 $item->quantity()->value(),
                 $item->unitPrice()->amount()
             );

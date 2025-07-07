@@ -26,7 +26,7 @@ class CheckoutCartHandler
             throw new \RuntimeException('Cart is empty.');
         }
 
-        $order = Order::fromCart(Uuid::v4()->toRfc4122(), $cart);
+        $order = Order::fromCart($command->cartId, $cart);
         $this->orderRepository->save($order);
     }
 }

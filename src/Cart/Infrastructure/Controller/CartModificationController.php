@@ -27,14 +27,14 @@ class CartModificationController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['productId'], $data['quantity'], $data['unitPrice'], $data['currency'])) {
+        if (!isset($data['product'], $data['quantity'], $data['unitPrice'], $data['currency'])) {
             return new JsonResponse(['error' => 'Missing required fields'], Response::HTTP_BAD_REQUEST);
         }
 
         try {
             $command = new AddProductToCartCommand(
                 $id,
-                $data['productId'],
+                $data['product'],
                 (int) $data['quantity'],
                 (int) $data['unitPrice'],
                 new Currency($data['currency'])
@@ -48,8 +48,8 @@ class CartModificationController
         }
     }
 
-    #[Route('/cart/{id}/items/{productId}', name: 'update_cart_item', methods: ['PATCH'])]
-    public function updateProductQuantity(string $id, string $productId, Request $request): Response
+    #[Route('/cart/{id}/items/{product}', name: 'update_cart_item', methods: ['PATCH'])]
+    public function updateProductQuantity(string $id, string $product, Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
 
@@ -60,7 +60,7 @@ class CartModificationController
         try {
             $command = new UpdateProductQuantityCommand(
                 $id,
-                $productId,
+                $product,
                 (int) $data['quantity']
             );
 
@@ -72,11 +72,11 @@ class CartModificationController
         }
     }
 
-    #[Route('/cart/{id}/items/{productId}', name: 'remove_cart_item', methods: ['DELETE'])]
-    public function removeProduct(string $id, string $productId): Response
+    #[Route('/cart/{id}/items/{product}', name: 'remove_cart_item', methods: ['DELETE'])]
+    public function removeProduct(string $id, string $product): Response
     {
         try {
-            $command = new RemoveProductFromCartCommand($id, $productId);
+            $command = new RemoveProductFromCartCommand($id, $product);
             ($this->removeHandler)($command);
 
             return new JsonResponse(['message' => 'Product removed'], Response::HTTP_OK);

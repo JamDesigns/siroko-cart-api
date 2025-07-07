@@ -20,12 +20,12 @@ class AddProductToCartHandlerIntegrationTest extends TestCase
         $handler = new AddProductToCartHandler($repo);
 
         $cartId = 'test-cart-1';
-        $productId = '00000000-0000-0000-0000-000000000001';
+        $product = '00000000-0000-0000-0000-000000000001';
         $quantity = 3;
         $unitPrice = 1200; // €12.00
         $currency = new Currency('EUR');
 
-        $command = new AddProductToCartCommand($cartId, $productId, $quantity, $unitPrice, $currency);
+        $command = new AddProductToCartCommand($cartId, $product, $quantity, $unitPrice, $currency);
 
         $handler($command);
 
@@ -46,11 +46,11 @@ class AddProductToCartHandlerIntegrationTest extends TestCase
         $handler = new AddProductToCartHandler($repo);
 
         $cartId = 'test-cart-2';
-        $productId = '00000000-0000-0000-0000-000000000002';
+        $product = '00000000-0000-0000-0000-000000000002';
         $currency = new Currency('EUR');
 
-        $handler(new AddProductToCartCommand($cartId, $productId, 2, 1000, $currency));
-        $handler(new AddProductToCartCommand($cartId, $productId, 3, 1000, $currency));
+        $handler(new AddProductToCartCommand($cartId, $product, 2, 1000, $currency));
+        $handler(new AddProductToCartCommand($cartId, $product, 3, 1000, $currency));
 
         $cart = $repo->find($cartId);
 
@@ -69,19 +69,19 @@ class AddProductToCartHandlerIntegrationTest extends TestCase
         $removeHandler = new RemoveProductFromCartHandler($repo);
 
         $cartId = 'test-cart-3';
-        $productId1 = '00000000-0000-0000-0000-000000000003';
-        $productId2 = '00000000-0000-0000-0000-000000000004';
+        $product1 = '00000000-0000-0000-0000-000000000003';
+        $product2 = '00000000-0000-0000-0000-000000000004';
         $currency = new Currency('EUR');
 
-        $addHandler(new AddProductToCartCommand($cartId, $productId1, 1, 1000, $currency));
-        $addHandler(new AddProductToCartCommand($cartId, $productId2, 1, 1500, $currency));
+        $addHandler(new AddProductToCartCommand($cartId, $product1, 1, 1000, $currency));
+        $addHandler(new AddProductToCartCommand($cartId, $product2, 1, 1500, $currency));
 
-        $removeHandler(new RemoveProductFromCartCommand($cartId, $productId1));
+        $removeHandler(new RemoveProductFromCartCommand($cartId, $product1));
 
         $updatedCart = $repo->find($cartId);
 
         $this->assertNotNull($updatedCart);
         $this->assertCount(1, $updatedCart->items());
-        $this->assertEquals($productId2, $updatedCart->items()[0]->productId()->value());
+        $this->assertEquals($product2, $updatedCart->items()[0]->product()->value());
     }
 }

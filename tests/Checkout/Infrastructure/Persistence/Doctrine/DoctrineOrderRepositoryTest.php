@@ -5,7 +5,7 @@ namespace App\Tests\Checkout\Infrastructure\Persistence\Doctrine;
 use App\Cart\Domain\Model\Cart;
 use App\Cart\Domain\Model\Currency;
 use App\Cart\Domain\Model\Money;
-use App\Cart\Domain\Model\ProductId;
+use App\Cart\Domain\Model\Product;
 use App\Cart\Domain\Model\Quantity;
 use App\Cart\Infrastructure\Persistence\InMemoryCartRepository;
 use App\Checkout\Application\Command\CheckoutCartCommand;
@@ -34,11 +34,11 @@ class DoctrineOrderRepositoryTest extends KernelTestCase
         $orderRepo = static::getContainer()->get(DoctrineOrderRepository::class);
 
         $cartId = 'checkout-db-cart-isolated';
-        $productId = new ProductId('66666666-6666-6666-6666-666666666666');
+        $product = new Product('66666666-6666-6666-6666-666666666666');
         $currency = new Currency('EUR');
 
         $cart = new Cart($cartId);
-        $cart->addProduct($productId, new Quantity(2), new Money(1000, $currency));
+        $cart->addProduct($product, new Quantity(2), new Money(1000, $currency));
         $cartRepo->save($cart);
 
         $handler = new CheckoutCartHandler($cartRepo, $orderRepo);

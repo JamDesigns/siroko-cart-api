@@ -5,56 +5,73 @@ namespace App\Tests\Cart\Application\Command;
 use App\Cart\Application\Command\AddProductToCartCommand;
 use App\Cart\Application\Command\AddProductToCartHandler;
 use App\Cart\Domain\Model\Cart;
-use App\Cart\Domain\Model\Currency;
-use App\Cart\Domain\Model\ProductId;
+use App\Cart\Infrastructure\Persistence\Doctrine\CartEntity;
+use App\Cart\Domain\Model\Product;
 use App\Cart\Domain\Model\Quantity;
 use App\Cart\Domain\Model\Money;
-use App\Cart\Domain\Repository\CartRepository;
-use PHPUnit\Framework\TestCase;
+use App\Cart\Domain\Model\Currency;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Uid\Uuid;
 
-class AddProductToCartHandlerTest extends TestCase
+class AddProductToCartHandlerTest extends KernelTestCase
 {
-    public function test_it_adds_a_product_to_cart(): void
+    private EntityManagerInterface $em;
+    private AddProductToCartHandler $handler;
+
+    protected function setUp(): void
     {
-        echo "🛒 Running test: AddProductToCartHandlerTest\n";
-        $cartId = 'cart-123';
-        $productId = '11111111-1111-1111-1111-111111111111';
+        echo "🧪 Running application test: AddProductToCartHandler\n";
+
+        self::bootKernel();
+
+        $this->em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->handler = static::getContainer()->get(AddProductToCartHandler::class);
+
+        // 🔄 Reset SQLite schema
+        $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($this->em);
+        $metadata = $this->em->getMetadataFactory()->getAllMetadata();
+
+        $schemaTool->dropSchema($metadata);
+        $schemaTool->createSchema($metadata);
+    }
+
+    public function test_it_adds_product_to_cart_and_persists_it(): void
+    {
+        $cartId = Uuid::v4()->toRfc4122();
+        $product = Uuid::v4()->toRfc4122();
         $quantity = 2;
-        $price = 1500; // 15,00 €
+        $price = 1500;
         $currency = new Currency('EUR');
-
-        // Repository Mock
-        $repository = $this->createMock(CartRepository::class);
-
-        $repository->method('find')
-            ->with($cartId)
-            ->willReturn(null);
-
-        $repository->expects($this->once())
-            ->method('save')
-            ->with($this->callback(function (Cart $cart) use ($productId, $quantity, $price, $currency) {
-                $items = $cart->items();
-                $this->assertCount(1, $items);
-
-                $item = $items[0];
-                $this->assertTrue($item->productId()->equals(new ProductId($productId)));
-                $this->assertEquals($quantity, $item->quantity()->value());
-                $this->assertEquals($price, $item->unitPrice()->amount());
-                $this->assertTrue($item->unitPrice()->currency()->equals($currency));
-
-                return true;
-            }));
-
-        $handler = new AddProductToCartHandler($repository);
 
         $command = new AddProductToCartCommand(
             $cartId,
-            $productId,
+            $product,
             $quantity,
             $price,
             $currency
         );
 
-        $handler($command);
+        ($this->handler)($command);
+
+        $cartEntity = $this->em->getRepository(CartEntity::class)->findOneBy(['id' => $cartId]);
+
+        $this->assertNotNull($cartEntity);
+        $this->assertSame($cartId, $cartEntity->getId());
+        $this->assertCount(1, $cartEntity->getItems());
+
+        $item = $cartEntity->getItems()[0];
+        $this->assertSame($product, $item->getProductId());
+        $this->assertSame($quantity, $item->getQuantity());
+        $this->assertSame($price, $item->getUnitPrice());
+        $this->assertSame($currency->code(), $item->getCurrency());
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        $this->em->createQuery('DELETE FROM App\Cart\Infrastructure\Persistence\Doctrine\CartItemEntity')->execute();
+        $this->em->createQuery('DELETE FROM App\Cart\Infrastructure\Persistence\Doctrine\CartEntity')->execute();
     }
 }

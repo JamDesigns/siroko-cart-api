@@ -35,7 +35,7 @@ services:
         autoconfigure: true
 
     App\Cart\Domain\Repository\CartRepository:
-        alias: App\Cart\Infrastructure\Persistence\InMemoryCartRepository
+        alias: App\Cart\Infrastructure\Persistence\Doctrine\DoctrineCartRepository
 
     App\Checkout\Infrastructure\Controller\CheckoutController:
         public: true
