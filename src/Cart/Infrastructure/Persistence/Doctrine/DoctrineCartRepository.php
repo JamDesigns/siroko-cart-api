@@ -79,5 +79,23 @@ class DoctrineCartRepository implements CartRepository
             $this->em->flush();
         }
     }
-}
 
+    public function all(): array
+    {
+        $cartEntities = $this->em->getRepository(CartEntity::class)->findAll();
+
+        return array_map(function (CartEntity $entity) {
+            $cart = new Cart($entity->getId());
+
+            foreach ($entity->getItems() as $itemEntity) {
+                $cart->addProduct(
+                    Product::fromPrimitives($itemEntity->getProductId()),
+                    Quantity::fromPrimitives($itemEntity->getQuantity()),
+                    new Money($itemEntity->getUnitPrice(), new Currency($itemEntity->getCurrency()))
+                );
+            }
+
+            return $cart;
+        }, $cartEntities);
+    }
+}

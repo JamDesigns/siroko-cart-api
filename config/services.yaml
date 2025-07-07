@@ -39,6 +39,11 @@ services:
         autowire: true
         autoconfigure: true
 
+    App\Cart\Infrastructure\Controller\CartQueryController:
+        public: true
+        autowire: true
+        autoconfigure: true
+
     App\Cart\Application\Command\ClearCartHandler:
         autowire: true
         autoconfigure: true
