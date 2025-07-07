@@ -34,6 +34,11 @@ services:
         autowire: true
         autoconfigure: true
 
+    App\Cart\Infrastructure\Controller\CartDeletionController:
+        public: true
+        autowire: true
+        autoconfigure: true
+
     App\Cart\Domain\Repository\CartRepository:
         alias: App\Cart\Infrastructure\Persistence\Doctrine\DoctrineCartRepository
 
