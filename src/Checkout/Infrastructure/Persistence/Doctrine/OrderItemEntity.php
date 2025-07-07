@@ -37,4 +37,19 @@ class OrderItemEntity
     {
         $this->order = $order;
     }
+
+    public function getProduct(): string
+    {
+        return $this->product;
+    }
+
+    public function getQuantity(): int
+    {
+        return $this->quantity;
+    }
+
+    public function getUnitPrice(): int
+    {
+        return $this->unitPrice;
+    }
 }
