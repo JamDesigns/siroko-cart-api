@@ -20,6 +20,11 @@ class InMemoryCartRepository implements CartRepository
         $this->storage[$cart->id()] = $cart;
     }
 
+    public function delete(string $id): void
+    {
+        unset($this->storage[$id]);
+    }
+
     // Additional method for testing or manual reset
     public function clear(): void
     {
