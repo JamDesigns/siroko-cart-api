@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+README.md
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Dependencies (will be installed during build)
+vendor/
+node_modules/
+
+# Cache and temporary files
+var/cache/
+var/log/
+var/sessions/
+.env.local
+.env.*.local
