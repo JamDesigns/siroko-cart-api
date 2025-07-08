@@ -2,11 +2,8 @@
 
 namespace App\Cart\Domain\Model;
 
-use App\Cart\Domain\Model\Money;
-use App\Cart\Domain\Model\Product;
-use App\Cart\Domain\Model\CartItem;
-use App\Cart\Domain\Model\Currency;
-use App\Cart\Domain\Model\Quantity;
+use App\Shared\Domain\Event\EventBus;
+use App\Shared\Domain\Event\GenericEvent;
 use App\Cart\Domain\Exception\ProductNotInCartException;
 
 final class Cart
@@ -14,7 +11,9 @@ final class Cart
     /** @var CartItem[] */
     private array $items = [];
 
-    public function __construct(private readonly string $id) {}
+    public function __construct(private readonly string $id) {
+        // Constructor remains the same, no EventBus injection
+    }
 
     public function id(): string
     {
@@ -32,11 +31,36 @@ final class Cart
             if ($item->product()->equals($product)) {
                 $newQty = new Quantity($item->quantity()->value() + $quantity->value());
                 $item->updateQuantity($newQty);
+
+                // Emit event using the EventBus singleton
+                EventBus::getInstance()->recordEvent(new GenericEvent(
+                    'ProductUpdatedInCart',
+                    'Product quantity updated in the cart',
+                    [
+                        'cart_id' => $this->id(),
+                        'product_id' => $product->value(),
+                        'quantity' => $newQty->value()
+                    ]
+                ));
+
                 return;
             }
         }
 
+        // New product added
         $this->items[] = new CartItem($product, $quantity, $unitPrice);
+
+        // Emit event using the EventBus singleton
+        EventBus::getInstance()->recordEvent(new GenericEvent(
+            'ProductAddedToCart',
+            'Product added to the cart',
+            [
+                'cart_id' => $this->id(),
+                'product_id' => $product->value(),
+                'quantity' => $quantity->value(),
+                'unit_price' => $unitPrice->amount()
+            ]
+        ));
     }
 
     public function removeProduct(Product $product): void
@@ -88,6 +112,10 @@ final class Cart
 
     public static function fromPrimitives(string $id, array $items): self
     {
+        // Get the EventBus instance
+        $eventBus = EventBus::getInstance();
+
+        // Create the cart using the EventBus
         $cart = new self($id);
 
         foreach ($items as $itemData) {
@@ -103,5 +131,10 @@ final class Cart
             fn(CartItem $item) => $item->toPrimitives(),
             $this->items
         );
+    }
+
+    public function dispatchEvents(): void
+    {
+        EventBus::getInstance()->dispatchEvents();
     }
 }

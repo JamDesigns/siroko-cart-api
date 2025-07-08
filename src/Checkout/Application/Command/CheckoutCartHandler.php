@@ -5,7 +5,8 @@ namespace App\Checkout\Application\Command;
 use App\Cart\Domain\Repository\CartRepository;
 use App\Checkout\Domain\Model\Order;
 use App\Checkout\Domain\Repository\OrderRepository;
-use Symfony\Component\Uid\Uuid;
+use App\Shared\Domain\Event\EventBus;
+use App\Shared\Domain\Event\GenericEvent;
 
 class CheckoutCartHandler
 {
@@ -16,17 +17,48 @@ class CheckoutCartHandler
 
     public function __invoke(CheckoutCartCommand $command): void
     {
+        // Find the cart
         $cart = $this->cartRepository->find($command->cartId);
 
+        // If the cart is not found, emit a "CartNotFound" event
         if (!$cart) {
-            throw new \RuntimeException('Cart not found.');
+            EventBus::getInstance()->recordEvent(new GenericEvent(
+                'CartNotFound',
+                'Cart not found during checkout',
+                ['cart_id' => $command->cartId]
+            ));
+            EventBus::getInstance()->dispatchEvents();
+            return;
         }
 
+        // If the cart is empty, emit a "CartEmpty" event
         if (count($cart->items()) === 0) {
-            throw new \RuntimeException('Cart is empty.');
+            EventBus::getInstance()->recordEvent(new GenericEvent(
+                'CartEmpty',
+                'Cart is empty during checkout',
+                ['cart_id' => $command->cartId]
+            ));
+            EventBus::getInstance()->dispatchEvents();
+            return;
         }
 
+        // Create the order from the cart
         $order = Order::fromCart($command->cartId, $cart);
         $this->orderRepository->save($order);
+
+        // Emit an "OrderCreated" event after the order is created
+        EventBus::getInstance()->recordEvent(new GenericEvent(
+            'OrderCreated',
+            'Order successfully created from the cart',
+            [
+                'order_id' => $order->id(),
+                'cart_id' => $command->cartId,
+                'total_amount' => $order->total(),
+                'currency' => $order->currency()
+            ]
+        ));
+
+        // Dispatch the events
+        EventBus::getInstance()->dispatchEvents();
     }
 }
