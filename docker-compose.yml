@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: siroko-cart-api
+    ports:
+      - "8000:8000"  # Exposing application port 8000
+    volumes:
+      - .:/app  # Mapping the local directory to the /app folder inside the container
+    environment:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /app/var/data.db  # Path where the SQLite database file is stored
+    depends_on:
+      - db
+
+volumes:
+  postgres-data:
