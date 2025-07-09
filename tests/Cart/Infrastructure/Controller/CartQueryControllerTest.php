@@ -2,20 +2,18 @@
 
 namespace App\Tests\Cart\Infrastructure\Controller;
 
-use App\Cart\Domain\Model\Cart;
+use App\Cart\Application\Command\AddProductToCartCommand;
+use App\Cart\Application\Command\AddProductToCartHandler;
 use App\Cart\Domain\Model\Currency;
-use App\Cart\Domain\Model\Money;
-use App\Cart\Domain\Model\Product;
-use App\Cart\Domain\Model\Quantity;
 use App\Cart\Infrastructure\Persistence\Doctrine\DoctrineCartRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
-use Doctrine\ORM\Tools\SchemaTool;
 
 class CartQueryControllerTest extends WebTestCase
 {
     private DoctrineCartRepository $repository;
+    private AddProductToCartHandler $addHandler;
     private EntityManagerInterface $em;
     private \Symfony\Bundle\FrameworkBundle\KernelBrowser $client;
 
@@ -23,37 +21,46 @@ class CartQueryControllerTest extends WebTestCase
     {
         echo "🧪 Running functional test: GET /carts (list all carts)\n";
 
-        $this->client = static::createClient(); // ✅ Solo una vez
+        $this->client = static::createClient();
 
         $this->em = static::getContainer()->get(EntityManagerInterface::class);
 
-        $schemaTool = new SchemaTool($this->em);
-        $schemaTool->dropSchema($this->em->getMetadataFactory()->getAllMetadata());
-        $schemaTool->createSchema($this->em->getMetadataFactory()->getAllMetadata());
+        $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($this->em);
+        $metadata = $this->em->getMetadataFactory()->getAllMetadata();
+        $schemaTool->dropSchema($metadata);
+        $schemaTool->createSchema($metadata);
 
         $this->repository = new DoctrineCartRepository($this->em);
+        $this->addHandler = new AddProductToCartHandler($this->repository);
     }
 
     public function test_it_returns_all_carts(): void
     {
-        $cart1 = new Cart('cart-1');
-        $cart1->addProduct(
-            new Product(Uuid::v4()->toRfc4122()),
-            new Quantity(2),
-            new Money(1000, new Currency('EUR'))
-        );
+        $cart1Id = 'cart-1';
+        $product1 = Uuid::v4()->toRfc4122();
+        $currency = new Currency('EUR');
 
-        $cart2 = new Cart('cart-2');
-        $cart2->addProduct(
-            new Product(Uuid::v4()->toRfc4122()),
-            new Quantity(1),
-            new Money(2500, new Currency('EUR'))
-        );
+        // Add product to cart-1
+        ($this->addHandler)(new AddProductToCartCommand(
+            $cart1Id,
+            $product1,
+            2,
+            1000,
+            $currency
+        ));
 
-        $this->repository->save($cart1);
-        $this->repository->save($cart2);
+        $cart2Id = 'cart-2';
+        $product2 = Uuid::v4()->toRfc4122();
 
-        // Usar client ya creado en setUp()
+        // Add product to cart-2
+        ($this->addHandler)(new AddProductToCartCommand(
+            $cart2Id,
+            $product2,
+            1,
+            2500,
+            $currency
+        ));
+
         $this->client->request('GET', '/carts');
 
         $this->assertResponseIsSuccessful();
@@ -61,7 +68,7 @@ class CartQueryControllerTest extends WebTestCase
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertCount(2, $data);
-        $this->assertEquals('cart-1', $data[0]['id']);
-        $this->assertEquals('cart-2', $data[1]['id']);
+        $this->assertEquals($cart1Id, $data[0]['id']);
+        $this->assertEquals($cart2Id, $data[1]['id']);
     }
 }

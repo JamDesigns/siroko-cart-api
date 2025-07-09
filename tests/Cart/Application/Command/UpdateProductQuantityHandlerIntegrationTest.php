@@ -51,7 +51,8 @@ class UpdateProductQuantityHandlerIntegrationTest extends TestCase
         // Manually create a cart (empty, without products)
         $repo->save(new \App\Cart\Domain\Model\Cart($cartId));
 
-        $this->expectException(\App\Cart\Domain\Exception\ProductNotInCartException::class);
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Product not found in cart');
 
         // Attempt to update a product that doesn't exist
         $updateHandler(new UpdateProductQuantityCommand($cartId, $product, 3));
