@@ -5,14 +5,16 @@ FROM php:8.4-apache
 RUN apt-get update && apt-get install -y \
     git \
     libfreetype6-dev \
-    libpng-dev \
     libjpeg-dev \
-    # libfreetype6-dev \
+    libpng-dev \
     libsqlite3-dev \
     unzip \
     zip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_sqlite
+    && docker-php-ext-install gd pdo pdo_sqlite \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory to /var/www/html
 WORKDIR /var/www/html/
@@ -20,11 +22,8 @@ WORKDIR /var/www/html/
 # Copy the project contents into the container
 COPY . .
 
-# Install Composer (dependency manager for PHP)
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
 # Install Symfony dependencies with Composer
-RUN composer install --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader
 
 # Copy Apache virtual host configuration
 COPY ./config/apache/000-default.conf /etc/apache2/sites-available/000-default.conf

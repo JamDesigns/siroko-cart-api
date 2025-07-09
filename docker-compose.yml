@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build: .
@@ -7,12 +5,13 @@ services:
     ports:
       - "8000:8000"  # Exposing application port 8000
     volumes:
-      - .:/app  # Mapping the local directory to the /app folder inside the container
+      - .:/var/www/html  # Mapping the local directory to match Dockerfile WORKDIR
     environment:
       DB_CONNECTION: sqlite
-      DB_DATABASE: /app/var/data.db  # Path where the SQLite database file is stored
-    depends_on:
-      - db
+      DB_DATABASE: /var/www/html/var/data.db  # Path where the SQLite database file is stored
+    networks:
+      - app-network
 
-volumes:
-  postgres-data:
+networks:
+  app-network:
+    driver: bridge

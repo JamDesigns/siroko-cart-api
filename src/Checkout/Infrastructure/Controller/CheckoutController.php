@@ -19,6 +19,8 @@ class CheckoutController
             $command = new CheckoutCartCommand($cartId);
             ($this->handler)($command);
 
+            
+
             return new JsonResponse(['message' => 'Order created successfully'], Response::HTTP_CREATED);
         } catch (\Throwable $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
