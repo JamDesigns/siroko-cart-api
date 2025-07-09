@@ -2,11 +2,9 @@
 
 namespace App\Tests\Cart\Infrastructure\Controller;
 
-use App\Cart\Domain\Model\Cart;
-use App\Cart\Domain\Model\Money;
-use App\Cart\Domain\Model\Product;
+use App\Cart\Application\Command\AddProductToCartCommand;
+use App\Cart\Application\Command\AddProductToCartHandler;
 use App\Cart\Domain\Model\Currency;
-use App\Cart\Domain\Model\Quantity;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use App\Cart\Infrastructure\Persistence\Doctrine\DoctrineCartRepository;
@@ -20,20 +18,24 @@ class RemoveProductFromCartControllerTest extends WebTestCase
         $client = static::createClient();
         $container = static::getContainer();
 
-        /** @var InMemoryCartRepository $repo */
         $repo = $container->get(DoctrineCartRepository::class);
+        $handler = $container->get(AddProductToCartHandler::class);
 
         $cartId = 'test-cart-remove';
-        $product = new Product('33333333-3333-3333-3333-333333333333');
+        $productId = '33333333-3333-3333-3333-333333333333';
         $currency = new Currency('EUR');
 
-        // Setup: cart with one item
-        $cart = new Cart($cartId);
-        $cart->addProduct($product, new Quantity(1), new Money(1000, $currency));
-        $repo->save($cart);
+        // Preload cart using handler
+        $handler(new AddProductToCartCommand(
+            $cartId,
+            $productId,
+            1,
+            1000,
+            $currency
+        ));
 
         // Send DELETE request
-        $client->request('DELETE', "/cart/{$cartId}/items/{$product->value()}");
+        $client->request('DELETE', "/cart/{$cartId}/items/{$productId}");
 
         $this->assertResponseIsSuccessful();
         $this->assertJson($client->getResponse()->getContent());

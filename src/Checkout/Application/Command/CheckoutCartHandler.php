@@ -15,7 +15,7 @@ class CheckoutCartHandler
         private readonly OrderRepository $orderRepository
     ) {}
 
-    public function __invoke(CheckoutCartCommand $command): void
+    public function __invoke(CheckoutCartCommand $command): string
     {
         // Find the cart
         $cart = $this->cartRepository->find($command->cartId);
@@ -28,7 +28,7 @@ class CheckoutCartHandler
                 ['cart_id' => $command->cartId]
             ));
             EventBus::getInstance()->dispatchEvents();
-            return;
+            return 'cart_not_found';
         }
 
         // If the cart is empty, emit a "CartEmpty" event
@@ -39,12 +39,15 @@ class CheckoutCartHandler
                 ['cart_id' => $command->cartId]
             ));
             EventBus::getInstance()->dispatchEvents();
-            return;
+            return 'cart_empty';
         }
 
         // Create the order from the cart
         $order = Order::fromCart($command->cartId, $cart);
         $this->orderRepository->save($order);
+
+        // Empty the cart after creating the order
+        $this->cartRepository->delete($command->cartId);
 
         // Emit an "OrderCreated" event after the order is created
         EventBus::getInstance()->recordEvent(new GenericEvent(
@@ -60,5 +63,7 @@ class CheckoutCartHandler
 
         // Dispatch the events
         EventBus::getInstance()->dispatchEvents();
+
+        return 'order_created';
     }
 }

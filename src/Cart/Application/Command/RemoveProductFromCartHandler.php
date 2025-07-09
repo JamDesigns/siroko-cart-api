@@ -1,11 +1,11 @@
 <?php
-
 namespace App\Cart\Application\Command;
 
+use App\Cart\Domain\Model\CartItem;
 use App\Cart\Domain\Model\Product;
 use App\Cart\Domain\Repository\CartRepository;
-use App\Shared\Domain\Event\GenericEvent;
 use App\Shared\Domain\Event\EventBus;
+use App\Shared\Domain\Event\GenericEvent;
 
 class RemoveProductFromCartHandler
 {
@@ -13,30 +13,26 @@ class RemoveProductFromCartHandler
 
     public function __invoke(RemoveProductFromCartCommand $command): void
     {
-        // Find the cart to remove the product from
-        $cart = $this->repository->find($command->cartId);
+        $cart = $this->repository->find($command->cartId)
+             ?? throw new \Exception("Cart not found");
 
-        if (!$cart) {
-            throw new \Exception("Cart not found");
-        }
+        // Filter items except the one we deleted
+        $newItems = array_filter(
+            $cart->items(),
+            fn(CartItem $i) => ! $i->product()->equals(new Product($command->product))
+        );
 
-        // Remove product from cart
-        $cart->removeProduct(new Product($command->product));
-
-        // Emit event indicating the product has been removed
         EventBus::getInstance()->recordEvent(new GenericEvent(
             'ProductRemovedFromCart',
-            'Product removed from the cart',
+            'Product removed from cart',
             [
-                'cart_id' => $command->cartId,
-                'product_id' => $command->product
+                'cart_id'    => $command->cartId,
+                'product_id' => $command->product,
             ]
         ));
 
-        // Save the updated cart
+        $cart->setItems(array_values($newItems));
         $this->repository->save($cart);
-
-        // Dispatch the events
         EventBus::getInstance()->dispatchEvents();
     }
 }

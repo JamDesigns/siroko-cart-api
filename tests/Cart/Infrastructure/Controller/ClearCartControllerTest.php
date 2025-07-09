@@ -3,12 +3,10 @@
 namespace App\Tests\Cart\Infrastructure\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use App\Cart\Domain\Model\Cart;
-use App\Cart\Domain\Model\Product;
-use App\Cart\Domain\Model\Quantity;
-use App\Cart\Domain\Model\Money;
-use App\Cart\Domain\Model\Currency;
+use App\Cart\Application\Command\AddProductToCartCommand;
+use App\Cart\Application\Command\AddProductToCartHandler;
 use App\Cart\Infrastructure\Persistence\Doctrine\DoctrineCartRepository;
+use App\Cart\Domain\Model\Currency;
 
 class ClearCartControllerTest extends WebTestCase
 {
@@ -19,17 +17,20 @@ class ClearCartControllerTest extends WebTestCase
         $client = static::createClient();
         $container = static::getContainer();
 
-        /** @var DoctrineCartRepository $repo */
-        $repo = $container->get(DoctrineCartRepository::class);
+        /** @var AddProductToCartHandler $handler */
+        $handler = $container->get(AddProductToCartHandler::class);
 
         $cartId = 'test-cart-clear';
-        $product = new Product('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
-        $currency = new Currency('EUR');
+        $productId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
-        // Preload cart
-        $cart = new Cart($cartId);
-        $cart->addProduct($product, new Quantity(2), new Money(1000, $currency));
-        $repo->save($cart);
+        // Preload cart using application handler
+        $handler(new AddProductToCartCommand(
+            $cartId,
+            $productId,
+            2,
+            1000,
+            new Currency('EUR')
+        ));
 
         // Send DELETE request
         $client->request('DELETE', "/cart/{$cartId}");
@@ -40,7 +41,8 @@ class ClearCartControllerTest extends WebTestCase
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertEquals('Cart deleted', $response['message']);
 
-        // Assert cart is gone
+        /** @var DoctrineCartRepository $repo */
+        $repo = $container->get(DoctrineCartRepository::class);
         $this->assertNull($repo->find($cartId), 'Cart should be deleted');
     }
 }

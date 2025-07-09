@@ -1,12 +1,11 @@
 <?php
-
 namespace App\Cart\Application\Command;
 
 use App\Cart\Domain\Model\Product;
 use App\Cart\Domain\Model\Quantity;
 use App\Cart\Domain\Repository\CartRepository;
-use App\Shared\Domain\Event\GenericEvent;
 use App\Shared\Domain\Event\EventBus;
+use App\Shared\Domain\Event\GenericEvent;
 
 class UpdateProductQuantityHandler
 {
@@ -14,34 +13,37 @@ class UpdateProductQuantityHandler
 
     public function __invoke(UpdateProductQuantityCommand $command): void
     {
-        // Find the cart to update the product quantity
-        $cart = $this->repository->find($command->cartId);
+        $cart = $this->repository->find($command->cartId)
+             ?? throw new \Exception("Cart not found");
 
-        if (!$cart) {
-            throw new \Exception("Cart not found");
+        $product  = new Product($command->product);
+        $newQty   = new Quantity($command->newQuantity);
+        $updated  = false;
+
+        $items = $cart->items();
+        foreach ($items as &$item) {
+            if ($item->product()->equals($product)) {
+                $item->updateQuantity($newQty);
+                $updated = true;
+                break;
+            }
+        }
+        if (! $updated) {
+            throw new \Exception("Product not found in cart");
         }
 
-        // Update the product quantity in the cart
-        $cart->updateQuantity(
-            new Product($command->product),
-            new Quantity($command->newQuantity)
-        );
-
-        // Emit event indicating the product quantity has been updated
         EventBus::getInstance()->recordEvent(new GenericEvent(
             'ProductQuantityUpdatedInCart',
-            'Product quantity updated in the cart',
+            'Product quantity updated in cart',
             [
-                'cart_id' => $command->cartId,
+                'cart_id'    => $command->cartId,
                 'product_id' => $command->product,
-                'new_quantity' => $command->newQuantity
+                'quantity'   => $newQty->value(),
             ]
         ));
 
-        // Save the updated cart
+        $cart->setItems($items);
         $this->repository->save($cart);
-
-        // Dispatch the events
         EventBus::getInstance()->dispatchEvents();
     }
 }

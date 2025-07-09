@@ -1,180 +1,104 @@
-﻿# **E-commerce Cart and Checkout API**
-This repository implements the basic functionality for a shopping cart and checkout system in an e-commerce platform. It includes features to manage products in the cart, process checkout, and generate orders. The architecture is designed with **Hexagonal Architecture** (ports and adapters) and **Domain-Driven Design (DDD)** principles, ensuring scalability and flexibility.
+# 🛒 Siroko Cart & Checkout API
 
-## ***Project Overview***
-The goal of this project is to develop the **cart** and **checkout** system of an e-commerce platform. Users can add, update, or remove products from the cart, and then process the checkout to generate an order. The system is designed as a **decoupled API** that will later integrate with the user interface. The code is built using principles of **CQRS** (Command Query Responsibility Segregation) and **DDD** (Domain-Driven Design), ensuring a clean, scalable, and easily maintainable architecture.
+## 📦 Features
 
-## ***OpenAPI Specification***
-The OpenAPI specification is not available as a yaml file, but the following endpoints are implemented in the API:
+- Add, update, and remove products in the cart.
+- Retrieve cart contents.
+- Checkout and generate persistent orders.
+- Full domain decoupling from the Symfony framework.
+- Domain events for all key actions.
 
-### **Cart Operations**
-**POST /cart/{cartId}/items**:
+## 📑 OpenAPI Specification
 
-Adds a product to the cart.
+- Although not provided in YAML format, the collection is exported via Postman and included in the repository:
 
-Request body: {"product": "product\_id", "quantity": 2, "unitPrice": 100}
+🗂️ postman/SirokoCartAPI.postman_collection.json
+🌍 Uses the environment variable: base_url → http://127.0.0.1:8000
 
-Success: Product added to the cart.
+### 🔧 Endpoints - Cart
 
-Error: Cart not found or invalid input.
+- POST /cart/{cartId}/items – Add item to cart
+- PATCH /cart/{cartId}/items/{productId} – Update item quantity
+- DELETE /cart/{cartId}/items/{productId} – Remove item
+- GET /cart/{cartId} – View cart contents
+- GET /carts – View all carts (for debugging)
+- DELETE /cart/{cartId} – Empty entire cart
 
-**PATCH /cart/{cartId}/items/{productId}**:
+### 🔧 Endpoints - Checkout
 
-Updates the quantity of an existing product in the cart.
+- POST /checkout/{cartId} – Finalize cart and generate order
+- GET /orders – View all generated orders
 
-Request body: {"quantity": 3}
+## 🧱 Domain Model
 
-Success: Product quantity updated.
+- Cart → Root aggregate holding CartItems
+- CartItem → Line in cart, containing product + qty + price
+- Order → Immutable order after checkout
+- Value Objects: Money, Currency, Quantity, Product
 
-Error: Product not found in the cart.
+## Domain Events
 
-**DELETE /cart/{cartId}/items/{productId}**:
+- ProductAddedToCart
+- ProductQuantityUpdatedInCart
+- ProductRemovedFromCart
+- CartEmptied
+- OrderCreated
+- These events are dispatched internally using a custom EventBus (prints messages to the console).
 
-Removes a product from the cart.
+## 🧪 Testing
 
-Success: Product removed from the cart.
-
-Error: Product not found in the cart.
-
-**GET /cart/{cartId}**:
-
-Retrieves all the items in the cart.
-
-Success: Returns all items in the cart.
-
-Error: Cart not found.
-
-### **Checkout Operations**
-**POST /checkout/{cartId}**:
-
-Processes the checkout and generates an order from the cart.
-
-Success: Order created and confirmation returned.
-
-Error: Cart is empty or cart not found.
-
-### **Domain Events**
-**ProductAddedToCart**: Dispatched when a product is added to the cart.
-
-**ProductUpdatedInCart**: Dispatched when a product's quantity is updated in the cart.
-
-**ProductRemovedFromCart**: Dispatched when a product is removed from the cart.
-
-**CartEmptied**: Dispatched when the cart is emptied.
-
-**OrderCreated**: Dispatched when an order is successfully created from the cart.
-
-## ***Domain Model***
-The domain model follows **Domain-Driven Design (DDD)** principles and consists of the following key entities:
-
-**Cart**: Represents the shopping cart, which contains a collection of items.
-
-**Product**: Represents a product in the cart.
-
-**Order**: Represents a completed purchase that is generated from the cart.
-
-### ***Domain Events***
-**ProductAddedToCart**: Triggered when a product is added to the cart.
-
-**ProductUpdatedInCart**: Triggered when the quantity of a product in the cart is updated.
-
-**ProductRemovedFromCart**: Triggered when a product is removed from the cart.
-
-**CartEmptied**: Triggered when the cart is emptied.
-
-**OrderCreated**: Triggered when an order is successfully created from the cart.
-
-## ***Technologies Used***
-**PHP 8.4**: The main programming language used for the API.
-
-**Symfony**: Framework used to handle the application logic.
-
-**Doctrine**: ORM used for database persistence.
-
-**PHPUnit**: For testing and ensuring code quality.
-
-**Docker**: Used to containerize the application and manage dependencies.
-
-## ***Setup Instructions***
-### **Setting Up with Docker**
-
-1. **Clone the repository**:
-
-First, clone the repository to your local machine.
-
-\```bash
-
-git clone <https://github.com/JamDesigns/siroko-cart-api.git>
-
-cd siroko-cart-api
-
-2. **Install PHP dependencies**:
-
-Run composer install to install the necessary PHP dependencies defined in composer.json.
-
-\```bash
-
-composer install
-
-3. **Create and start containers**:
-
-Use docker-compose to set up the environment. This will spin up the necessary services (e.g., database, application server).
-
-\```bash
-
-docker-compose up --build
-
-This will build the containers and start the services. Make sure Docker is installed and running on your system.
-
-If you face any issues, ensure you have Docker and Docker Compose installed on your system.
-
-4. **Access the application**:
-
-Once the containers are running, the application should be accessible via the exposed ports as defined in the docker-compose.yml file.
-
-You can interact with the API via the following endpoint (depending on your configuration):
-
-\```bash
-
-http://localhost:8000
-
-### ***Running Tests***
-
-To ensure the code is working correctly and the logic is covered, you can run the tests using the following command:
-
-\```bash
+- Unit tests: Value objects and business rules
+- Integration tests: Command handlers and repository behaviors
+- Functional tests: HTTP requests (using Symfony client)
+- Persistence tests: Doctrine repositories with SQLite
+- Run tests with:
 
 composer test
 
-This will execute all unit and integration tests using **PHPUnit**, ensuring that everything works as expected.
+✅ 100% pass rate (30/30)
 
+## ⚙️ Setup with Docker
 
-## ***Architecture***
+- 1. Clone the repository:
 
-This system is designed following **Hexagonal Architecture**, where the core business logic (the domain) is decoupled from the external frameworks and infrastructure (like Symfony). The key components include:
+    git clone https://github.com/JamDesigns/siroko-cart-api.git
+    cd siroko-cart-api
+- 2. Install dependencies:
 
-**Domain**: Contains the core logic, including entities, aggregates, and domain events.
+    composer install
+- 3. Build and run the app:
 
-**Application**: Handles use cases and command handlers, where the business logic is executed.
+    docker-compose build
+    docker-compose up -d
+- Application will be available at http://localhost:8000
 
-**Infrastructure**: Deals with repositories, database interactions, and external dependencies.
+## 🛠️ Tech Stack
 
-The system also follows **CQRS** (Command Query Responsibility Segregation) principles, which separates read and write operations to better manage scalability and performance.
+- PHP 8.4
+- Symfony 6
+- Doctrine ORM
+- PHPUnit
+- Docker
+- Postman (for API testing)
 
+## 🧠 Architecture
 
-## ***Git Workflow***
+- Domain layer: Framework-agnostic core logic
+- Application layer: CQRS Command Handlers
+- Infrastructure layer: Doctrine + Symfony Controllers
 
-**Feature Branches**: Each new feature is developed in its own feature branch.
+## 🔀 Git Workflow
 
-**Pull Requests (PR)**: Once the feature is complete, open a PR to merge it into the master branch.
+- Feature branches: feature/<name>
+- Pull Requests: Used to merge into master
+- Commit messages: Imperative, clean, English
 
-**Commit Messages**: Commit messages are written in the **imperative mood** and are kept concise and descriptive.
+## 📁 Postman Collection
 
+- Included in the repo: postman/SirokoCartAPI.postman_collection.json
+- Uses base_url variable: http://localhost:8000
+- You can import the environment and collection into Postman directly.
 
-## ***Notes***
+- ✍️ Developed for Siroko - Senior Code Challenge
+- 👤 By: José Ángel Mosquera Rodríguez
 
-This is a **basic prototype** focused on the core functionality for the cart and checkout system. It is built with scalability in mind but additional features such as payment processing, user authentication, and advanced cart functionalities can be added later.
-
------
-**Siroko Senior Code Challenge**\
-*Developed by: José Angel Mosquera Rodríguez*

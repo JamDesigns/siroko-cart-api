@@ -2,11 +2,10 @@
 
 namespace App\Tests\Checkout\Infrastructure\Persistence\Doctrine;
 
-use App\Cart\Domain\Model\Cart;
+use App\Cart\Application\Command\AddProductToCartCommand;
+use App\Cart\Application\Command\AddProductToCartHandler;
 use App\Cart\Domain\Model\Currency;
-use App\Cart\Domain\Model\Money;
 use App\Cart\Domain\Model\Product;
-use App\Cart\Domain\Model\Quantity;
 use App\Cart\Infrastructure\Persistence\InMemoryCartRepository;
 use App\Checkout\Application\Command\CheckoutCartCommand;
 use App\Checkout\Application\Command\CheckoutCartHandler;
@@ -29,7 +28,6 @@ class DoctrineOrderRepositoryTest extends KernelTestCase
     {
         echo "🧪 Running DB persistence test: DoctrineOrderRepository\n";
 
-        // ✅ Use isolated repository, not from container
         $cartRepo = new InMemoryCartRepository();
         $orderRepo = static::getContainer()->get(DoctrineOrderRepository::class);
 
@@ -37,14 +35,18 @@ class DoctrineOrderRepositoryTest extends KernelTestCase
         $product = new Product('66666666-6666-6666-6666-666666666666');
         $currency = new Currency('EUR');
 
-        $cart = new Cart($cartId);
-        $cart->addProduct($product, new Quantity(2), new Money(1000, $currency));
-        $cartRepo->save($cart);
+        $addHandler = new AddProductToCartHandler($cartRepo);
+        ($addHandler)(new AddProductToCartCommand(
+            $cartId,
+            $product->value(),
+            2,
+            1000,
+            $currency
+        ));
 
         $handler = new CheckoutCartHandler($cartRepo, $orderRepo);
         $handler(new CheckoutCartCommand($cartId));
 
-        // 🔍 Verify persisted order
         $order = $this->em->getRepository(OrderEntity::class)->findOneBy(['id' => $cartId]);
         if (!$order) {
             $order = $this->em->getRepository(OrderEntity::class)->findOneBy([], ['id' => 'DESC']);
@@ -60,7 +62,6 @@ class DoctrineOrderRepositoryTest extends KernelTestCase
     {
         parent::tearDown();
 
-        // 🧹 Clean DB after test
         $this->em->createQuery('DELETE FROM App\Checkout\Infrastructure\Persistence\Doctrine\OrderItemEntity')->execute();
         $this->em->createQuery('DELETE FROM App\Checkout\Infrastructure\Persistence\Doctrine\OrderEntity')->execute();
     }

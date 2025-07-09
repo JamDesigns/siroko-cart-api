@@ -2,14 +2,13 @@
 
 namespace App\Tests\Checkout\Infrastructure\Controller;
 
-use App\Cart\Domain\Model\Cart;
-use App\Cart\Domain\Model\Money;
-use App\Cart\Domain\Model\Product;
+use App\Cart\Application\Command\AddProductToCartCommand;
+use App\Cart\Application\Command\AddProductToCartHandler;
 use App\Cart\Domain\Model\Currency;
-use App\Cart\Domain\Model\Quantity;
+use App\Cart\Domain\Model\Product;
+use App\Cart\Infrastructure\Persistence\Doctrine\DoctrineCartRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use App\Cart\Infrastructure\Persistence\Doctrine\DoctrineCartRepository;
 
 class CheckoutControllerTest extends WebTestCase
 {
@@ -20,19 +19,22 @@ class CheckoutControllerTest extends WebTestCase
         $client = static::createClient();
         $container = static::getContainer();
 
-        /** @var InMemoryCartRepository $cartRepo */
+        /** @var DoctrineCartRepository $cartRepo */
         $cartRepo = $container->get(DoctrineCartRepository::class);
+        $addHandler = new AddProductToCartHandler($cartRepo);
 
         $cartId = 'checkout-test-cart';
         $product = new Product('55555555-5555-5555-5555-555555555555');
         $currency = new Currency('EUR');
 
-        // Preload cart
-        $cart = new Cart($cartId);
-        $cart->addProduct($product, new Quantity(2), new Money(1200, $currency));
-        $cartRepo->save($cart);
+        ($addHandler)(new AddProductToCartCommand(
+            $cartId,
+            $product->value(),
+            2,
+            1200,
+            $currency
+        ));
 
-        // Perform checkout
         $client->request('POST', "/checkout/{$cartId}");
 
         $this->assertResponseStatusCodeSame(201);

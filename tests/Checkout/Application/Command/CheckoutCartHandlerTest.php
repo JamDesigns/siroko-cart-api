@@ -2,11 +2,10 @@
 
 namespace App\Tests\Checkout\Application\Command;
 
-use App\Cart\Domain\Model\Cart;
+use App\Cart\Application\Command\AddProductToCartCommand;
+use App\Cart\Application\Command\AddProductToCartHandler;
 use App\Cart\Domain\Model\Currency;
-use App\Cart\Domain\Model\Money;
 use App\Cart\Domain\Model\Product;
-use App\Cart\Domain\Model\Quantity;
 use App\Cart\Infrastructure\Persistence\InMemoryCartRepository;
 use App\Checkout\Application\Command\CheckoutCartCommand;
 use App\Checkout\Application\Command\CheckoutCartHandler;
@@ -23,11 +22,16 @@ class CheckoutCartHandlerTest extends TestCase
         $product = new Product('44444444-4444-4444-4444-444444444444');
         $currency = new Currency('EUR');
 
-        $cart = new Cart($cartId);
-        $cart->addProduct($product, new Quantity(2), new Money(1500, $currency)); // 30 €
-
         $cartRepo = new InMemoryCartRepository();
-        $cartRepo->save($cart);
+        $addHandler = new AddProductToCartHandler($cartRepo);
+
+        ($addHandler)(new AddProductToCartCommand(
+            $cartId,
+            $product->value(),
+            2,
+            1500,
+            $currency
+        ));
 
         $orderRepo = new InMemoryOrderRepository();
 
